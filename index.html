@@ -239,23 +239,7 @@ const data = [
 // 3. PAGE NAVIGATION
 // ==========================================
 
-function showPage(id,btn){
-  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-  document.getElementById(id).classList.add("active");
-
-  document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
-
-  if(btn) btn.classList.add("active");
-
-  if(id==="bank") filterQuestions();
-}
-
-// ==========================================
-// 4. QUESTION BANK
-// ==========================================
-
-function render(list){
-  const box=document.getElementById("questions");
+function showPage(page){
   box.innerHTML="";
 
   if(!list.length){
