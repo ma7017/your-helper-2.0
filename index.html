@@ -1,10 +1,12 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>YOUR HELPER 2.0</title>
+
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#0b1120;color:#e8eefc;font-family:Arial,sans-serif}
@@ -12,7 +14,7 @@ header{background:#111d35;padding:22px 5%;border-bottom:1px solid #263653}
 header h1{margin:0;color:#72a7ff}
 header p{color:#a9b9d5;margin:7px 0 0}
 nav{display:flex;gap:9px;flex-wrap:wrap;padding:15px 5%;background:#101a2e}
-button{background:#1c2d4b;color:white;border:1px solid #344b70;padding:11px 17px;border-radius:9px;cursor:pointer}
+button{background:#1c2d4b;color:white;border:1px solid #344b70;padding:11px 17px;border-radius:9px;cursor:pointer;margin:3px}
 button:hover,.active{background:#2766c5}
 main{max-width:1100px;margin:auto;padding:25px 5%}
 .page{display:none}.page.active{display:block}
@@ -21,12 +23,17 @@ h2{color:#8db8ff}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
 .stat{font-size:28px;color:#79aaff;font-weight:bold}
 input,select{padding:12px;border-radius:8px;border:1px solid #405778;background:#0e192c;color:white;width:100%;margin:8px 0}
+input[type="checkbox"]{width:auto}
+input[type="file"]{background:#14213a}
 .question{background:#101c31;padding:16px;border-radius:10px;margin:12px 0}
 .answer{display:none;color:#a9e8c0;margin-top:12px;white-space:pre-wrap}
 .small{color:#aab9d0;font-size:14px}
+.status{padding:12px;border-radius:8px;background:#0e192c;margin:10px 0;white-space:pre-wrap}
+.hidden{display:none!important}
 footer{text-align:center;padding:25px;color:#8092b0}
 </style>
 </head>
+
 <body>
 <header>
 <h1>YOUR HELPER 2.0</h1>
@@ -38,17 +45,21 @@ footer{text-align:center;padding:25px;color:#8092b0}
 <button onclick="showPage('bank',this)">Question Bank</button>
 <button onclick="showPage('plan',this)">Study Plan</button>
 <button onclick="showPage('progress',this)">Progress</button>
+<button onclick="showPage('admin',this)">Admin</button>
 </nav>
 
 <main>
+
 <section id="home" class="page active">
 <h2>Welcome to YOUR HELPER</h2>
 <p class="small">Study smarter. Practice daily. Improve every day.</p>
+
 <div class="grid">
 <div class="card"><div class="stat">Class 12</div><p>Academic Dashboard</p></div>
 <div class="card"><div class="stat">Chemistry</div><p>Chapter 7 Question Bank</p></div>
 <div class="card"><div class="stat" id="done">0</div><p>Questions Practised</p></div>
 </div>
+
 <div class="card">
 <h2>Quick Access</h2>
 <button onclick="showPage('bank',document.querySelectorAll('nav button')[1])">Open Question Bank</button>
@@ -59,7 +70,9 @@ footer{text-align:center;padding:25px;color:#8092b0}
 <section id="bank" class="page">
 <h2>Question Bank</h2>
 <p class="small">Class 12 Chemistry – Chapter 7: Alcohols, Phenols and Ethers</p>
+
 <input id="search" placeholder="Search questions..." oninput="filterQuestions()">
+
 <select id="section" onchange="filterQuestions()">
 <option value="all">All Sections</option>
 <option value="MCQ">MCQs</option>
@@ -70,6 +83,7 @@ footer{text-align:center;padding:25px;color:#8092b0}
 <option value="Conversions">Conversions</option>
 <option value="Case Study">Case Studies</option>
 </select>
+
 <div id="questions"></div>
 </section>
 
@@ -93,10 +107,85 @@ Questions whose answers you have opened.
 <p class="small">Your practice count updates as you reveal answers.</p>
 </div>
 </section>
+
+<section id="admin" class="page">
+<h2>Admin Panel</h2>
+
+<div class="card" id="loginBox">
+<h3>Admin Login</h3>
+<p class="small">Only the website administrator can upload questions.</p>
+<input id="adminEmail" type="email" placeholder="Admin email">
+<input id="adminPassword" type="password" placeholder="Admin password">
+<button onclick="loginAdmin()">Login</button>
+<div id="loginStatus" class="status">Login to access PDF upload.</div>
+</div>
+
+<div class="card hidden" id="uploadBox">
+<h3>Welcome, Admin</h3>
+<p class="small" id="adminIdentity"></p>
+<button onclick="logoutAdmin()">Logout</button>
+
+<hr>
+
+<h3>Upload Question Bank PDF</h3>
+<p class="small">Choose a text-based PDF. Questions will be extracted and saved to the online database.</p>
+
+<input id="pdfFile" type="file" accept="application/pdf">
+
+<select id="pdfCategory">
+<option value="MCQ">MCQ</option>
+<option value="AR">Assertion & Reason</option>
+<option value="2 Marks">2 Marks</option>
+<option value="3 Marks">3 Marks</option>
+<option value="5 Marks">5 Marks</option>
+<option value="Conversions">Conversions</option>
+<option value="Case Study">Case Study</option>
+</select>
+
+<button onclick="extractAndSavePDF()" id="uploadButton">Extract Questions & Save</button>
+<div id="uploadStatus" class="status">Select a PDF to begin.</div>
+</div>
+</section>
+
 </main>
+
 <footer>YOUR HELPER 2.0 · Made for learning</footer>
 
+<!-- Supabase and PDF.js libraries -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
 <script>
+// ==========================================
+// 1. SUPABASE SETTINGS
+// Replace these two values with your own.
+// ==========================================
+
+const SUPABASE_URL = "lsmbrtjpzyhslixukbvn";
+const SUPABASE_KEY = "sb_publishable_DlqpFot1NZyX4Rm3Mb_59w_2fOMFtnx
+";
+
+let supabaseClient = null;
+let remoteQuestions = [];
+let count = 0;
+let adminSession = null;
+
+if (
+  SUPABASE_URL.startsWith("https://") &&
+  !SUPABASE_URL.includes("YOUR_SUPABASE") &&
+  SUPABASE_KEY &&
+  !SUPABASE_KEY.includes("YOUR_SUPABASE")
+) {
+  supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+}
+
+// ==========================================
+// 2. ORIGINAL SAMPLE QUESTIONS
+// ==========================================
+
 const data = [
 {type:"MCQ",q:"The functional group of alcohols is:",a:"(b) –OH"},
 {type:"MCQ",q:"The IUPAC name of CH3OH is:",a:"(b) Methanol"},
@@ -106,8 +195,10 @@ const data = [
 {type:"MCQ",q:"Phenol reacts with bromine water to give:",a:"(c) 2,4,6-Tribromophenol"},
 {type:"MCQ",q:"The functional group of ethers is:",a:"(c) –O–"},
 {type:"MCQ",q:"Williamson synthesis is used for preparation of:",a:"(b) Ethers"},
+
 {type:"AR",q:"Assertion: Phenol is more acidic than ethanol. Reason: Phenoxide ion is stabilised by resonance.",a:"(a) Both A and R are true and R explains A."},
 {type:"AR",q:"Assertion: Alcohols have higher boiling points than ethers of comparable molecular masses. Reason: Alcohols form intermolecular hydrogen bonds.",a:"(a) Both A and R are true and R explains A."},
+
 {type:"2 Marks",q:"Define alcohols with an example.",a:"Alcohols are compounds in which a hydroxyl group (–OH) is attached to a saturated carbon atom. Example: CH3CH2OH (ethanol)."},
 {type:"2 Marks",q:"What are phenols?",a:"Phenols are compounds in which the –OH group is directly attached to an aromatic ring. Example: C6H5OH."},
 {type:"2 Marks",q:"What are ethers? Give an example.",a:"Ethers have an oxygen atom bonded to two alkyl or aryl groups. General formula: R–O–R'. Example: CH3OCH3."},
@@ -119,63 +210,420 @@ const data = [
 {type:"2 Marks",q:"What is the action of bromine water on phenol?",a:"Phenol forms a white precipitate of 2,4,6-tribromophenol."},
 {type:"2 Marks",q:"What is the Reimer-Tiemann reaction?",a:"Phenol reacts with CHCl3 and NaOH followed by acidification to form mainly salicylaldehyde."},
 {type:"2 Marks",q:"What is Kolbe's reaction?",a:"Sodium phenoxide reacts with CO2 under pressure followed by acidification to give salicylic acid."},
-{type:"3 Marks",q:"Explain the classification of alcohols.",a:"1. Primary: –OH carbon attached to one other carbon. Example CH3CH2OH.\\n2. Secondary: attached to two other carbons. Example CH3CHOHCH3.\\n3. Tertiary: attached to three other carbons. Example (CH3)3COH."},
-{type:"3 Marks",q:"Explain oxidation of primary, secondary and tertiary alcohols.",a:"Primary alcohol → Aldehyde → Carboxylic acid.\\nSecondary alcohol → Ketone.\\nTertiary alcohols resist oxidation under mild conditions."},
+
+{type:"3 Marks",q:"Explain the classification of alcohols.",a:"1. Primary: –OH carbon attached to one other carbon. Example CH3CH2OH.\n2. Secondary: attached to two other carbons. Example CH3CHOHCH3.\n3. Tertiary: attached to three other carbons. Example (CH3)3COH."},
+{type:"3 Marks",q:"Explain oxidation of primary, secondary and tertiary alcohols.",a:"Primary alcohol → Aldehyde → Carboxylic acid.\nSecondary alcohol → Ketone.\nTertiary alcohols resist oxidation under mild conditions."},
 {type:"3 Marks",q:"Explain dehydration of ethanol.",a:"At 413 K, intermolecular dehydration gives diethyl ether: 2C2H5OH → C2H5OC2H5 + H2O. At 443 K, intramolecular dehydration gives ethene: C2H5OH → CH2=CH2 + H2O."},
 {type:"3 Marks",q:"Explain Williamson ether synthesis with an example.",a:"Sodium alkoxide reacts with a primary alkyl halide to form an ether. C2H5ONa + CH3I → CH3OC2H5 + NaI. It generally proceeds through an SN2 mechanism."},
 {type:"3 Marks",q:"Distinguish between ethanol and phenol.",a:"Neutral FeCl3: phenol gives violet colour; ethanol does not. Bromine water: phenol gives white precipitate; ethanol does not. NaOH: phenol reacts; ethanol does not react appreciably."},
-{type:"5 Marks",q:"Explain methods of preparation of alcohols.",a:"1. From alkenes by hydration.\\n2. From haloalkanes using aqueous KOH.\\n3. By reduction of aldehydes to primary alcohols.\\n4. By reduction of ketones to secondary alcohols.\\n5. From Grignard reagents followed by hydrolysis."},
-{type:"5 Marks",q:"Explain chemical reactions of alcohols.",a:"1. With sodium: 2ROH + 2Na → 2RONa + H2.\\n2. With hydrogen halides: ROH + HX → RX + H2O.\\n3. Dehydration gives alkenes or ethers.\\n4. Oxidation gives aldehydes, acids or ketones.\\n5. Esterification gives esters."},
+
+{type:"5 Marks",q:"Explain methods of preparation of alcohols.",a:"1. From alkenes by hydration.\n2. From haloalkanes using aqueous KOH.\n3. By reduction of aldehydes to primary alcohols.\n4. By reduction of ketones to secondary alcohols.\n5. From Grignard reagents followed by hydrolysis."},
+{type:"5 Marks",q:"Explain chemical reactions of alcohols.",a:"1. With sodium: 2ROH + 2Na → 2RONa + H2.\n2. With hydrogen halides: ROH + HX → RX + H2O.\n3. Dehydration gives alkenes or ethers.\n4. Oxidation gives aldehydes, acids or ketones.\n5. Esterification gives esters."},
 {type:"5 Marks",q:"Explain preparation and chemical reactions of phenol.",a:"Preparation: from chlorobenzene, benzene sulphonic acid and diazonium salts. Reactions: with sodium, NaOH, bromination, nitration and Reimer-Tiemann reaction."},
 {type:"5 Marks",q:"Explain acidity of alcohols and phenols.",a:"Both contain O–H bond and can donate H+. Phenol is more acidic because phenoxide ion is resonance stabilised. Electron-withdrawing groups increase phenol acidity; electron-donating groups generally decrease it."},
+
 {type:"Conversions",q:"Convert ethanol into ethene.",a:"C2H5OH —conc. H2SO4, 443 K→ CH2=CH2 + H2O"},
 {type:"Conversions",q:"Convert ethanol into diethyl ether.",a:"2C2H5OH —conc. H2SO4, 413 K→ C2H5OC2H5 + H2O"},
 {type:"Conversions",q:"Convert ethanol into ethanal.",a:"CH3CH2OH —Cu, 573 K→ CH3CHO + H2"},
 {type:"Conversions",q:"Convert propan-2-ol into propanone.",a:"CH3CHOHCH3 —[O]→ CH3COCH3 + H2O"},
 {type:"Conversions",q:"Convert phenol into salicylic acid.",a:"Phenol → Sodium phenoxide → Sodium salicylate (with CO2) → Salicylic acid (after acidification)."},
 {type:"Conversions",q:"Convert phenol into salicylaldehyde.",a:"Phenol + CHCl3 + NaOH; acidification gives salicylaldehyde (Reimer-Tiemann reaction)."},
+
 {type:"Case Study",q:"What is the functional group of alcohols?",a:"–OH"},
 {type:"Case Study",q:"Which alcohol gives a ketone on oxidation?",a:"Secondary alcohol."},
 {type:"Case Study",q:"Which ion is formed when phenol loses H+?",a:"Phenoxide ion."},
 {type:"Case Study",q:"What colour does phenol give with neutral FeCl3?",a:"Violet."},
 {type:"Case Study",q:"Which reagent is used for ether cleavage?",a:"HI."}
 ];
-let count=0;
+
+// ==========================================
+// 3. PAGE NAVIGATION
+// ==========================================
+
 function showPage(id,btn){
- document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
- document.getElementById(id).classList.add('active');
- document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
- if(btn)btn.classList.add('active');
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+
+  document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+
+  if(btn) btn.classList.add("active");
+
+  if(id==="bank") filterQuestions();
 }
+
+// ==========================================
+// 4. QUESTION BANK
+// ==========================================
+
 function render(list){
- const box=document.getElementById('questions');
- box.innerHTML='';
- list.forEach((item,i)=>{
-  const div=document.createElement('div');
-  div.className='question';
-  const q=document.createElement('b');
-  q.textContent=(i+1)+'. ['+item.type+'] '+item.q;
-  const b=document.createElement('button');
-  b.textContent='Show Answer';
-  b.style.marginTop='12px';
-  const a=document.createElement('div');
-  a.className='answer';
-  a.textContent=item.a;
-  b.onclick=()=>{
-   const open=a.style.display==='block';
-   a.style.display=open?'none':'block';
-   b.textContent=open?'Show Answer':'Hide Answer';
-   if(!open){count++;document.getElementById('done').textContent=count;document.getElementById('progressCount').textContent=count;}
-  };
-  div.append(q,b,a);box.append(div);
- });
+  const box=document.getElementById("questions");
+  box.innerHTML="";
+
+  if(!list.length){
+    box.textContent="No questions found.";
+    return;
+  }
+
+  list.forEach((item,i)=>{
+    const div=document.createElement("div");
+    div.className="question";
+
+    const q=document.createElement("b");
+    q.textContent=(i+1)+". ["+item.type+"] "+item.q;
+
+    const b=document.createElement("button");
+    b.textContent="Show Answer";
+    b.style.marginTop="12px";
+
+    const a=document.createElement("div");
+    a.className="answer";
+    a.textContent=item.a || "Answer not available in the database.";
+
+    b.onclick=()=>{
+      const open=a.style.display==="block";
+      a.style.display=open?"none":"block";
+      b.textContent=open?"Show Answer":"Hide Answer";
+
+      if(!open){
+        count++;
+        document.getElementById("done").textContent=count;
+        document.getElementById("progressCount").textContent=count;
+      }
+    };
+
+    div.append(q,b,a);
+    box.append(div);
+  });
 }
+
 function filterQuestions(){
- const term=document.getElementById('search').value.toLowerCase();
- const section=document.getElementById('section').value;
- render(data.filter(x=>(section==='all'||x.type===section)&&x.q.toLowerCase().includes(term)));
+  const term=document.getElementById("search").value.toLowerCase();
+  const section=document.getElementById("section").value;
+
+  const all=[...data,...remoteQuestions];
+
+  const filtered=all.filter(x=>{
+    return (section==="all" || x.type===section) &&
+    x.q.toLowerCase().includes(term);
+  });
+
+  render(filtered);
 }
+
+// ==========================================
+// 5. LOAD QUESTIONS FROM SUPABASE
+// ==========================================
+
+async function loadRemoteQuestions(){
+  if(!supabaseClient) return;
+
+  const box=document.getElementById("questions");
+  box.innerHTML="Loading online questions...";
+
+  const {data:rows,error}=await supabaseClient
+    .from("questions")
+    .select("*")
+    .order("created_at",{ascending:false});
+
+  if(error){
+    box.textContent="Online questions could not be loaded: "+error.message;
+    return;
+  }
+
+  remoteQuestions=(rows||[]).map(row=>({
+    type:row.category || "2 Marks",
+    q:row.question_text,
+    a:row.correct_option || "",
+    options:row.options || []
+  }));
+
+  filterQuestions();
+}
+
+// ==========================================
+// 6. ADMIN LOGIN
+// ==========================================
+
+async function loginAdmin(){
+  const email=document.getElementById("adminEmail").value.trim();
+  const password=document.getElementById("adminPassword").value;
+  const status=document.getElementById("loginStatus");
+
+  if(!supabaseClient){
+    status.textContent="sb_publishable_DlqpFot1NZyX4Rm3Mb_59w_2fOMFtnx
+
+
+lsmbrtjpzyhslixukbvn.";
+    return;
+  }
+
+  if(!email || !password){
+    status.textContent="Enter your email and password.";
+    return;
+  }
+
+  status.textContent="Logging in...";
+
+  const {data,error}=await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if(error){
+    status.textContent="Login failed: "+error.message;
+    return;
+  }
+
+  adminSession=data.session;
+  showAdminPanel(data.user);
+}
+
+function showAdminPanel(user){
+  document.getElementById("loginBox").classList.add("hidden");
+  document.getElementById("uploadBox").classList.remove("hidden");
+  document.getElementById("adminIdentity").textContent="Logged in as: "+user.email;
+}
+
+async function logoutAdmin(){
+  if(supabaseClient){
+    await supabaseClient.auth.signOut();
+  }
+
+  adminSession=null;
+  document.getElementById("loginBox").classList.remove("hidden");
+  document.getElementById("uploadBox").classList.add("hidden");
+  document.getElementById("adminPassword").value="";
+  document.getElementById("loginStatus").textContent="You have logged out.";
+}
+
+// Restore an existing login session
+async function checkAdminSession(){
+  if(!supabaseClient) return;
+
+  const {data}=await supabaseClient.auth.getSession();
+
+  if(data.session){
+    adminSession=data.session;
+    showAdminPanel(data.session.user);
+  }
+}
+
+// ==========================================
+// 7. PDF TEXT EXTRACTION
+// ==========================================
+
+async function readPDF(file){
+  pdfjsLib.GlobalWorkerOptions.workerSrc=
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+  const buffer=await file.arrayBuffer();
+
+  const pdf=await pdfjsLib.getDocument({
+    data:new Uint8Array(buffer)
+  }).promise;
+
+  let fullText="";
+
+  for(let pageNo=1;pageNo<=pdf.numPages;pageNo++){
+    const page=await pdf.getPage(pageNo);
+    const content=await page.getTextContent();
+
+    const lines=[];
+    let currentY=null;
+    let currentLine="";
+
+    for(const item of content.items){
+      if(!item.str) continue;
+
+      const y=Math.round(item.transform[5]);
+
+      if(currentY!==null && Math.abs(y-currentY)>3){
+        lines.push(currentLine.trim());
+        currentLine="";
+      }
+
+      currentLine+=(currentLine?" ":"")+item.str;
+      currentY=y;
+    }
+
+    if(currentLine.trim()) lines.push(currentLine.trim());
+
+    fullText+=lines.join("\n")+"\n";
+  }
+
+  return fullText;
+}
+
+// ==========================================
+// 8. QUESTION DETECTION
+// Basic extraction for numbered question PDFs.
+// ==========================================
+
+function detectQuestions(text,defaultCategory){
+  const lines=text
+    .replace(/\r/g,"\n")
+    .split("\n")
+    .map(x=>x.trim())
+    .filter(Boolean);
+
+  const extracted=[];
+  let current=null;
+
+  const questionStart=/^(?:Q(?:uestion)?\.?\s*)?\d{1,3}\s*[\).:-]\s+(.+)/i;
+  const answerStart=/^(?:Ans(?:wer)?\.?\s*[:.-]\s*)(.+)/i;
+  const optionStart=/^([A-Da-d])[\).]\s*(.+)/;
+
+  function saveCurrent(){
+    if(!current) return;
+
+    const question=current.q.trim();
+
+    if(question.length<12) return;
+
+    extracted.push({
+      question_text:question,
+      options:current.options,
+      correct_option:current.answer || null,
+      category:current.category || defaultCategory
+    });
+
+    current=null;
+  }
+
+  for(const line of lines){
+    const qMatch=line.match(questionStart);
+
+    if(qMatch){
+      saveCurrent();
+
+      current={
+        q:qMatch[1],
+        options:[],
+        answer:null,
+        category:defaultCategory
+      };
+
+      continue;
+    }
+
+    if(!current) continue;
+
+    const ansMatch=line.match(answerStart);
+
+    if(ansMatch){
+      current.answer=ansMatch[1];
+      continue;
+    }
+
+    const optionMatch=line.match(optionStart);
+
+    if(optionMatch){
+      current.options.push({
+        label:optionMatch[1].toUpperCase(),
+        text:optionMatch[2]
+      });
+      continue;
+    }
+
+    current.q+=" "+line;
+  }
+
+  saveCurrent();
+
+  return extracted;
+}
+
+// ==========================================
+// 9. UPLOAD AND SAVE QUESTIONS
+// ==========================================
+
+async function extractAndSavePDF(){
+  const file=document.getElementById("pdfFile").files[0];
+  const status=document.getElementById("uploadStatus");
+  const button=document.getElementById("uploadButton");
+  const category=document.getElementById("pdfCategory").value;
+
+  if(!supabaseClient){
+    status.textContent="sb_publishable_DlqpFot1NZyX4Rm3Mb_59w_2fOMFtnx
+
+
+lsmbrtjpzyhslixukbvn.";
+    return;
+  }
+
+  if(!file){
+    status.textContent="Please select a PDF file first.";
+    return;
+  }
+
+  if(file.type!=="application/pdf"){
+    status.textContent="Please select a valid PDF file.";
+    return;
+  }
+
+  const {data:sessionData}=await supabaseClient.auth.getSession();
+
+  if(!sessionData.session){
+    status.textContent="Please login as admin first.";
+    return;
+  }
+
+  button.disabled=true;
+  status.textContent="Reading PDF...";
+
+  try{
+    const text=await readPDF(file);
+
+    if(!text.trim()){
+      status.textContent="No selectable text found. This may be a scanned PDF; OCR support is needed.";
+      return;
+    }
+
+    status.textContent="Extracting questions...";
+
+    const questions=detectQuestions(text,category);
+
+    if(!questions.length){
+      status.textContent=
+        "No numbered questions were detected. This PDF may use a different format. Try a text-based PDF with numbered questions.";
+      return;
+    }
+
+    status.textContent=
+      questions.length+" questions detected. Saving to Supabase...";
+
+    const {data:inserted,error}=await supabaseClient
+      .from("questions")
+      .insert(questions)
+      .select();
+
+    if(error){
+      status.textContent="Database save failed: "+error.message;
+      return;
+    }
+
+    status.textContent=
+      "Success! "+inserted.length+" questions saved online.\n"+
+      "They will now appear in the public Question Bank.";
+
+    document.getElementById("pdfFile").value="";
+    await loadRemoteQuestions();
+
+  }catch(error){
+    status.textContent="Error: "+error.message;
+  }finally{
+    button.disabled=false;
+  }
+}
+
+// ==========================================
+// 10. START WEBSITE
+// ==========================================
+
 render(data);
+loadRemoteQuestions();
+checkAdminSession();
+
 </script>
 </body>
 </html>
