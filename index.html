@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,8 +15,10 @@ header p{color:#a9b9d5;margin:7px 0 0}
 nav{display:flex;gap:9px;flex-wrap:wrap;padding:15px 5%;background:#101a2e}
 button{background:#1c2d4b;color:white;border:1px solid #344b70;padding:11px 17px;border-radius:9px;cursor:pointer;margin:3px}
 button:hover,.active{background:#2766c5}
+button:disabled{opacity:.5;cursor:not-allowed}
 main{max-width:1100px;margin:auto;padding:25px 5%}
-.page{display:none}.page.active{display:block}
+.page{display:none}
+.page.active{display:block}
 .card{background:#14213a;border:1px solid #293e60;padding:20px;border-radius:14px;margin:14px 0}
 h2{color:#8db8ff}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
@@ -62,8 +63,8 @@ footer{text-align:center;padding:25px;color:#8092b0}
 
 <div class="card">
 <h2>Quick Access</h2>
-<button onclick="showPage('bank',document.querySelectorAll('nav button')[1])">Open Question Bank</button>
-<button onclick="showPage('plan',document.querySelectorAll('nav button')[2])">Open Study Plan</button>
+<button onclick="showPage('bank')">Open Question Bank</button>
+<button onclick="showPage('plan')">Open Study Plan</button>
 </div>
 </section>
 
@@ -113,7 +114,7 @@ Questions whose answers you have opened.
 
 <div class="card" id="loginBox">
 <h3>Admin Login</h3>
-<p class="small">Only the website administrator can upload questions.</p>
+<p class="small">Login with your Supabase administrator account.</p>
 <input id="adminEmail" type="email" placeholder="Admin email">
 <input id="adminPassword" type="password" placeholder="Admin password">
 <button onclick="loginAdmin()">Login</button>
@@ -151,18 +152,16 @@ Questions whose answers you have opened.
 
 <footer>YOUR HELPER 2.0 · Made for learning</footer>
 
-<!-- Supabase and PDF.js libraries -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
 <script>
 // ==========================================
 // 1. SUPABASE SETTINGS
-// Replace these two values with your own.
 // ==========================================
 
-const SUPABASE_URL = "lsmbrtjpzyhslixukbvn";
-const SUPABASE_KEY = "sb_publishable_DlqpFot1NZyX4Rm3Mb_59w_2fOMFtnx";
+const SUPABASE_URL = "https://lsmbrtjpzyhslixukbvn.supabase.co";
+const SUPABASE_KEY = "PASTE_YOUR_SUPABASE_PUBLISHABLE_KEY_HERE";
 
 let supabaseClient = null;
 let remoteQuestions = [];
@@ -170,10 +169,10 @@ let count = 0;
 let adminSession = null;
 
 if (
+  window.supabase &&
   SUPABASE_URL.startsWith("https://") &&
-  !SUPABASE_URL.includes("sb_publishable_DlqpFot1NZyX4Rm3Mb_59w_2fOMFtnx") &&
   SUPABASE_KEY &&
-  !SUPABASE_KEY.includes("sb_publishable_DlqpFot1NZyX4Rm3Mb_59w_2fOMFtnx")
+  !SUPABASE_KEY.includes("PASTE_YOUR")
 ) {
   supabaseClient = window.supabase.createClient(
     SUPABASE_URL,
@@ -182,7 +181,7 @@ if (
 }
 
 // ==========================================
-// 2. ORIGINAL SAMPLE QUESTIONS
+// 2. ORIGINAL 41 SAMPLE QUESTIONS
 // ==========================================
 
 const data = [
@@ -214,7 +213,7 @@ const data = [
 {type:"3 Marks",q:"Explain oxidation of primary, secondary and tertiary alcohols.",a:"Primary alcohol → Aldehyde → Carboxylic acid.\nSecondary alcohol → Ketone.\nTertiary alcohols resist oxidation under mild conditions."},
 {type:"3 Marks",q:"Explain dehydration of ethanol.",a:"At 413 K, intermolecular dehydration gives diethyl ether: 2C2H5OH → C2H5OC2H5 + H2O. At 443 K, intramolecular dehydration gives ethene: C2H5OH → CH2=CH2 + H2O."},
 {type:"3 Marks",q:"Explain Williamson ether synthesis with an example.",a:"Sodium alkoxide reacts with a primary alkyl halide to form an ether. C2H5ONa + CH3I → CH3OC2H5 + NaI. It generally proceeds through an SN2 mechanism."},
-{{type:"3 Marks",q:"Distinguish between ethanol and phenol.",a:"Neutral FeCl3: phenol gives violet colour; ethanol does not. Bromine water: phenol gives white precipitate; ethanol does not. NaOH: phenol reacts; ethanol does not react appreciably."},},
+{type:"3 Marks",q:"Distinguish between ethanol and phenol.",a:"Neutral FeCl3: phenol gives violet colour; ethanol does not. Bromine water: phenol gives white precipitate; ethanol does not. NaOH: phenol reacts; ethanol does not react appreciably."},
 
 {type:"5 Marks",q:"Explain methods of preparation of alcohols.",a:"1. From alkenes by hydration.\n2. From haloalkanes using aqueous KOH.\n3. By reduction of aldehydes to primary alcohols.\n4. By reduction of ketones to secondary alcohols.\n5. From Grignard reagents followed by hydrolysis."},
 {type:"5 Marks",q:"Explain chemical reactions of alcohols.",a:"1. With sodium: 2ROH + 2Na → 2RONa + H2.\n2. With hydrogen halides: ROH + HX → RX + H2O.\n3. Dehydration gives alkenes or ethers.\n4. Oxidation gives aldehydes, acids or ketones.\n5. Esterification gives esters."},
@@ -239,7 +238,36 @@ const data = [
 // 3. PAGE NAVIGATION
 // ==========================================
 
-function showPage(page){
+function showPage(page,button){
+  document.querySelectorAll(".page").forEach(section=>{
+    section.classList.remove("active");
+  });
+
+  const target=document.getElementById(page);
+  if(target) target.classList.add("active");
+
+  document.querySelectorAll("nav button").forEach(btn=>{
+    btn.classList.remove("active");
+  });
+
+  if(button){
+    button.classList.add("active");
+  }else{
+    const navButtons=document.querySelectorAll("nav button");
+    const pages=["home","bank","plan","progress","admin"];
+    const index=pages.indexOf(page);
+    if(index>=0) navButtons[index].classList.add("active");
+  }
+
+  if(page==="bank") filterQuestions();
+}
+
+// ==========================================
+// 4. DISPLAY AND FILTER QUESTIONS
+// ==========================================
+
+function render(list){
+  const box=document.getElementById("questions");
   box.innerHTML="";
 
   if(!list.length){
@@ -280,14 +308,18 @@ function showPage(page){
 }
 
 function filterQuestions(){
-  const term=document.getElementById("search").value.toLowerCase();
-  const section=document.getElementById("section").value;
+  const searchBox=document.getElementById("search");
+  const sectionBox=document.getElementById("section");
 
+  if(!searchBox || !sectionBox) return;
+
+  const term=searchBox.value.toLowerCase();
+  const section=sectionBox.value;
   const all=[...data,...remoteQuestions];
 
-  const filtered=all.filter(x=>{
-    return (section==="all" || x.type===section) &&
-    x.q.toLowerCase().includes(term);
+  const filtered=all.filter(item=>{
+    return (section==="all" || item.type===section) &&
+      item.q.toLowerCase().includes(term);
   });
 
   render(filtered);
@@ -301,7 +333,7 @@ async function loadRemoteQuestions(){
   if(!supabaseClient) return;
 
   const box=document.getElementById("questions");
-  box.innerHTML="Loading online questions...";
+  box.textContent="Loading online questions...";
 
   const {data:rows,error}=await supabaseClient
     .from("questions")
@@ -315,7 +347,7 @@ async function loadRemoteQuestions(){
 
   remoteQuestions=(rows||[]).map(row=>({
     type:row.category || "2 Marks",
-    q:row.question_text,
+    q:row.question_text || "",
     a:row.correct_option || "",
     options:row.options || []
   }));
@@ -324,7 +356,7 @@ async function loadRemoteQuestions(){
 }
 
 // ==========================================
-// 6. ADMIN LOGIN
+// 6. ADMIN LOGIN AND LOGOUT
 // ==========================================
 
 async function loginAdmin(){
@@ -333,10 +365,7 @@ async function loginAdmin(){
   const status=document.getElementById("loginStatus");
 
   if(!supabaseClient){
-    status.textContent="sb_publishable_DlqpFot1NZyX4Rm3Mb_59w_2fOMFtnx
-
-
-lsmbrtjpzyhslixukbvn.";
+    status.textContent="Supabase is not configured. Check your Project URL and Publishable Key.";
     return;
   }
 
@@ -347,9 +376,9 @@ lsmbrtjpzyhslixukbvn.";
 
   status.textContent="Logging in...";
 
-  const {data,error}=await supabaseClient.auth.signInWithPassword({
-    email,
-    password
+  const {data:result,error}=await supabaseClient.auth.signInWithPassword({
+    email:email,
+    password:password
   });
 
   if(error){
@@ -357,8 +386,8 @@ lsmbrtjpzyhslixukbvn.";
     return;
   }
 
-  adminSession=data.session;
-  showAdminPanel(data.user);
+  adminSession=result.session;
+  showAdminPanel(result.user);
 }
 
 function showAdminPanel(user){
@@ -379,13 +408,12 @@ async function logoutAdmin(){
   document.getElementById("loginStatus").textContent="You have logged out.";
 }
 
-// Restore an existing login session
 async function checkAdminSession(){
   if(!supabaseClient) return;
 
-  const {data}=await supabaseClient.auth.getSession();
+  const {data,error}=await supabaseClient.auth.getSession();
 
-  if(data.session){
+  if(!error && data.session){
     adminSession=data.session;
     showAdminPanel(data.session.user);
   }
@@ -396,6 +424,10 @@ async function checkAdminSession(){
 // ==========================================
 
 async function readPDF(file){
+  if(!window.pdfjsLib){
+    throw new Error("PDF reader library did not load. Refresh the page and try again.");
+  }
+
   pdfjsLib.GlobalWorkerOptions.workerSrc=
     "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
@@ -439,14 +471,13 @@ async function readPDF(file){
 
 // ==========================================
 // 8. QUESTION DETECTION
-// Basic extraction for numbered question PDFs.
 // ==========================================
 
 function detectQuestions(text,defaultCategory){
   const lines=text
     .replace(/\r/g,"\n")
     .split("\n")
-    .map(x=>x.trim())
+    .map(line=>line.trim())
     .filter(Boolean);
 
   const extracted=[];
@@ -461,14 +492,14 @@ function detectQuestions(text,defaultCategory){
 
     const question=current.q.trim();
 
-    if(question.length<12) return;
-
-    extracted.push({
-      question_text:question,
-      options:current.options,
-      correct_option:current.answer || null,
-      category:current.category || defaultCategory
-    });
+    if(question.length>=12){
+      extracted.push({
+        question_text:question,
+        options:current.options,
+        correct_option:current.answer || null,
+        category:current.category || defaultCategory
+      });
+    }
 
     current=null;
   }
@@ -512,7 +543,6 @@ function detectQuestions(text,defaultCategory){
   }
 
   saveCurrent();
-
   return extracted;
 }
 
@@ -527,10 +557,7 @@ async function extractAndSavePDF(){
   const category=document.getElementById("pdfCategory").value;
 
   if(!supabaseClient){
-    status.textContent="sb_publishable_DlqpFot1NZyX4Rm3Mb_59w_2fOMFtnx
-
-
-lsmbrtjpzyhslixukbvn.";
+    status.textContent="Supabase is not configured. Check your Project URL and Publishable Key.";
     return;
   }
 
@@ -547,7 +574,7 @@ lsmbrtjpzyhslixukbvn.";
   const {data:sessionData}=await supabaseClient.auth.getSession();
 
   if(!sessionData.session){
-    status.textContent="Please login as admin first.";
+    status.textContent="Please login first.";
     return;
   }
 
@@ -555,25 +582,23 @@ lsmbrtjpzyhslixukbvn.";
   status.textContent="Reading PDF...";
 
   try{
-    const text=await readPDF(file);
+    const pdfText=await readPDF(file);
 
-    if(!text.trim()){
+    if(!pdfText.trim()){
       status.textContent="No selectable text found. This may be a scanned PDF; OCR support is needed.";
       return;
     }
 
     status.textContent="Extracting questions...";
 
-    const questions=detectQuestions(text,category);
+    const questions=detectQuestions(pdfText,category);
 
     if(!questions.length){
-      status.textContent=
-        "No numbered questions were detected. This PDF may use a different format. Try a text-based PDF with numbered questions.";
+      status.textContent="No numbered questions were detected. Try a text-based PDF with numbered questions.";
       return;
     }
 
-    status.textContent=
-      questions.length+" questions detected. Saving to Supabase...";
+    status.textContent=questions.length+" questions detected. Saving to Supabase...";
 
     const {data:inserted,error}=await supabaseClient
       .from("questions")
@@ -585,9 +610,7 @@ lsmbrtjpzyhslixukbvn.";
       return;
     }
 
-    status.textContent=
-      "Success! "+inserted.length+" questions saved online.\n"+
-      "They will now appear in the public Question Bank.";
+    status.textContent="Success! "+inserted.length+" questions saved online.\nThey will now appear in the public Question Bank.";
 
     document.getElementById("pdfFile").value="";
     await loadRemoteQuestions();
