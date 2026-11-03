@@ -326,23 +326,26 @@ function render(list){
   });
 }
 
-function filterQuestions(){
+function filterQuestions(){function filterQuestions(){
   const searchBox=document.getElementById("search");
   const sectionBox=document.getElementById("section");
+  const chapterBox=document.getElementById("chapter");
 
-  if(!searchBox || !sectionBox) return;
+  if(!searchBox || !sectionBox || !chapterBox) return;
 
   const term=searchBox.value.toLowerCase();
   const section=sectionBox.value;
+  const chapter=chapterBox.value;
   const all=[...data,...remoteQuestions];
 
   const filtered=all.filter(item=>{
     return (section==="all" || item.type===section) &&
+      (chapter==="all" || String(item.chapter)===chapter) &&
       item.q.toLowerCase().includes(term);
   });
 
   render(filtered);
-}
+}}
 
 // ==========================================
 // 5. LOAD QUESTIONS FROM SUPABASE
