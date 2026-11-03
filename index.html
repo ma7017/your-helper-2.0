@@ -172,9 +172,9 @@ let adminSession = null;
 
 if (
   SUPABASE_URL.startsWith("https://") &&
-  !SUPABASE_URL.includes("YOUR_SUPABASE") &&
+  !SUPABASE_URL.includes("sb_publishable_DlqpFot1NZyX4Rm3Mb_59w_2fOMFtnx") &&
   SUPABASE_KEY &&
-  !SUPABASE_KEY.includes("YOUR_SUPABASE")
+  !SUPABASE_KEY.includes("sb_publishable_DlqpFot1NZyX4Rm3Mb_59w_2fOMFtnx")
 ) {
   supabaseClient = window.supabase.createClient(
     SUPABASE_URL,
