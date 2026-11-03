@@ -1,0 +1,181 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YOUR HELPER 2.0</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0b1120;color:#e8eefc;font-family:Arial,sans-serif}
+header{background:#111d35;padding:22px 5%;border-bottom:1px solid #263653}
+header h1{margin:0;color:#72a7ff}
+header p{color:#a9b9d5;margin:7px 0 0}
+nav{display:flex;gap:9px;flex-wrap:wrap;padding:15px 5%;background:#101a2e}
+button{background:#1c2d4b;color:white;border:1px solid #344b70;padding:11px 17px;border-radius:9px;cursor:pointer}
+button:hover,.active{background:#2766c5}
+main{max-width:1100px;margin:auto;padding:25px 5%}
+.page{display:none}.page.active{display:block}
+.card{background:#14213a;border:1px solid #293e60;padding:20px;border-radius:14px;margin:14px 0}
+h2{color:#8db8ff}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.stat{font-size:28px;color:#79aaff;font-weight:bold}
+input,select{padding:12px;border-radius:8px;border:1px solid #405778;background:#0e192c;color:white;width:100%;margin:8px 0}
+.question{background:#101c31;padding:16px;border-radius:10px;margin:12px 0}
+.answer{display:none;color:#a9e8c0;margin-top:12px;white-space:pre-wrap}
+.small{color:#aab9d0;font-size:14px}
+footer{text-align:center;padding:25px;color:#8092b0}
+</style>
+</head>
+<body>
+<header>
+<h1>YOUR HELPER 2.0</h1>
+<p>Your Personal Study Dashboard | Class 12</p>
+</header>
+
+<nav>
+<button class="active" onclick="showPage('home',this)">Home</button>
+<button onclick="showPage('bank',this)">Question Bank</button>
+<button onclick="showPage('plan',this)">Study Plan</button>
+<button onclick="showPage('progress',this)">Progress</button>
+</nav>
+
+<main>
+<section id="home" class="page active">
+<h2>Welcome to YOUR HELPER</h2>
+<p class="small">Study smarter. Practice daily. Improve every day.</p>
+<div class="grid">
+<div class="card"><div class="stat">Class 12</div><p>Academic Dashboard</p></div>
+<div class="card"><div class="stat">Chemistry</div><p>Chapter 7 Question Bank</p></div>
+<div class="card"><div class="stat" id="done">0</div><p>Questions Practised</p></div>
+</div>
+<div class="card">
+<h2>Quick Access</h2>
+<button onclick="showPage('bank',document.querySelectorAll('nav button')[1])">Open Question Bank</button>
+<button onclick="showPage('plan',document.querySelectorAll('nav button')[2])">Open Study Plan</button>
+</div>
+</section>
+
+<section id="bank" class="page">
+<h2>Question Bank</h2>
+<p class="small">Class 12 Chemistry – Chapter 7: Alcohols, Phenols and Ethers</p>
+<input id="search" placeholder="Search questions..." oninput="filterQuestions()">
+<select id="section" onchange="filterQuestions()">
+<option value="all">All Sections</option>
+<option value="MCQ">MCQs</option>
+<option value="AR">Assertion & Reason</option>
+<option value="2 Marks">2 Marks</option>
+<option value="3 Marks">3 Marks</option>
+<option value="5 Marks">5 Marks</option>
+<option value="Conversions">Conversions</option>
+<option value="Case Study">Case Studies</option>
+</select>
+<div id="questions"></div>
+</section>
+
+<section id="plan" class="page">
+<h2>My Study Plan</h2>
+<div class="card">
+<h3>Daily Study Tasks</h3>
+<label><input type="checkbox"> Physics revision</label><br><br>
+<label><input type="checkbox"> Chemistry revision</label><br><br>
+<label><input type="checkbox"> Mathematics practice</label><br><br>
+<label><input type="checkbox"> Entrance preparation</label><br><br>
+<label><input type="checkbox"> Revise today's mistakes</label>
+</div>
+</section>
+
+<section id="progress" class="page">
+<h2>My Progress</h2>
+<div class="card">
+<div class="stat" id="progressCount">0</div>
+Questions whose answers you have opened.
+<p class="small">Your practice count updates as you reveal answers.</p>
+</div>
+</section>
+</main>
+<footer>YOUR HELPER 2.0 · Made for learning</footer>
+
+<script>
+const data = [
+{type:"MCQ",q:"The functional group of alcohols is:",a:"(b) –OH"},
+{type:"MCQ",q:"The IUPAC name of CH3OH is:",a:"(b) Methanol"},
+{type:"MCQ",q:"Which alcohol gives a ketone on oxidation?",a:"(b) Secondary alcohol"},
+{type:"MCQ",q:"Phenol is more acidic than ethanol because:",a:"(a) Phenoxide ion is resonance stabilised"},
+{type:"MCQ",q:"Which reagent distinguishes phenol from ethanol?",a:"(b) Neutral FeCl3"},
+{type:"MCQ",q:"Phenol reacts with bromine water to give:",a:"(c) 2,4,6-Tribromophenol"},
+{type:"MCQ",q:"The functional group of ethers is:",a:"(c) –O–"},
+{type:"MCQ",q:"Williamson synthesis is used for preparation of:",a:"(b) Ethers"},
+{type:"AR",q:"Assertion: Phenol is more acidic than ethanol. Reason: Phenoxide ion is stabilised by resonance.",a:"(a) Both A and R are true and R explains A."},
+{type:"AR",q:"Assertion: Alcohols have higher boiling points than ethers of comparable molecular masses. Reason: Alcohols form intermolecular hydrogen bonds.",a:"(a) Both A and R are true and R explains A."},
+{type:"2 Marks",q:"Define alcohols with an example.",a:"Alcohols are compounds in which a hydroxyl group (–OH) is attached to a saturated carbon atom. Example: CH3CH2OH (ethanol)."},
+{type:"2 Marks",q:"What are phenols?",a:"Phenols are compounds in which the –OH group is directly attached to an aromatic ring. Example: C6H5OH."},
+{type:"2 Marks",q:"What are ethers? Give an example.",a:"Ethers have an oxygen atom bonded to two alkyl or aryl groups. General formula: R–O–R'. Example: CH3OCH3."},
+{type:"2 Marks",q:"Why is phenol more acidic than ethanol?",a:"Phenol forms phenoxide ion, which is stabilised by resonance. Ethoxide ion does not have such resonance stabilisation. Therefore, phenol is more acidic."},
+{type:"2 Marks",q:"What is Lucas reagent?",a:"Lucas reagent is a mixture of concentrated HCl and anhydrous ZnCl2. It is used to distinguish primary, secondary and tertiary alcohols."},
+{type:"2 Marks",q:"What happens when ethanol reacts with sodium?",a:"Ethanol forms sodium ethoxide and hydrogen gas: 2C2H5OH + 2Na → 2C2H5ONa + H2"},
+{type:"2 Marks",q:"What is Williamson ether synthesis?",a:"Sodium alkoxide reacts with a primary alkyl halide to form an ether: RONa + R'X → ROR' + NaX"},
+{type:"2 Marks",q:"What is denatured alcohol?",a:"Ethanol made unfit for drinking by adding substances such as methanol and other denaturants is called denatured alcohol."},
+{type:"2 Marks",q:"What is the action of bromine water on phenol?",a:"Phenol forms a white precipitate of 2,4,6-tribromophenol."},
+{type:"2 Marks",q:"What is the Reimer-Tiemann reaction?",a:"Phenol reacts with CHCl3 and NaOH followed by acidification to form mainly salicylaldehyde."},
+{type:"2 Marks",q:"What is Kolbe's reaction?",a:"Sodium phenoxide reacts with CO2 under pressure followed by acidification to give salicylic acid."},
+{type:"3 Marks",q:"Explain the classification of alcohols.",a:"1. Primary: –OH carbon attached to one other carbon. Example CH3CH2OH.\\n2. Secondary: attached to two other carbons. Example CH3CHOHCH3.\\n3. Tertiary: attached to three other carbons. Example (CH3)3COH."},
+{type:"3 Marks",q:"Explain oxidation of primary, secondary and tertiary alcohols.",a:"Primary alcohol → Aldehyde → Carboxylic acid.\\nSecondary alcohol → Ketone.\\nTertiary alcohols resist oxidation under mild conditions."},
+{type:"3 Marks",q:"Explain dehydration of ethanol.",a:"At 413 K, intermolecular dehydration gives diethyl ether: 2C2H5OH → C2H5OC2H5 + H2O. At 443 K, intramolecular dehydration gives ethene: C2H5OH → CH2=CH2 + H2O."},
+{type:"3 Marks",q:"Explain Williamson ether synthesis with an example.",a:"Sodium alkoxide reacts with a primary alkyl halide to form an ether. C2H5ONa + CH3I → CH3OC2H5 + NaI. It generally proceeds through an SN2 mechanism."},
+{type:"3 Marks",q:"Distinguish between ethanol and phenol.",a:"Neutral FeCl3: phenol gives violet colour; ethanol does not. Bromine water: phenol gives white precipitate; ethanol does not. NaOH: phenol reacts; ethanol does not react appreciably."},
+{type:"5 Marks",q:"Explain methods of preparation of alcohols.",a:"1. From alkenes by hydration.\\n2. From haloalkanes using aqueous KOH.\\n3. By reduction of aldehydes to primary alcohols.\\n4. By reduction of ketones to secondary alcohols.\\n5. From Grignard reagents followed by hydrolysis."},
+{type:"5 Marks",q:"Explain chemical reactions of alcohols.",a:"1. With sodium: 2ROH + 2Na → 2RONa + H2.\\n2. With hydrogen halides: ROH + HX → RX + H2O.\\n3. Dehydration gives alkenes or ethers.\\n4. Oxidation gives aldehydes, acids or ketones.\\n5. Esterification gives esters."},
+{type:"5 Marks",q:"Explain preparation and chemical reactions of phenol.",a:"Preparation: from chlorobenzene, benzene sulphonic acid and diazonium salts. Reactions: with sodium, NaOH, bromination, nitration and Reimer-Tiemann reaction."},
+{type:"5 Marks",q:"Explain acidity of alcohols and phenols.",a:"Both contain O–H bond and can donate H+. Phenol is more acidic because phenoxide ion is resonance stabilised. Electron-withdrawing groups increase phenol acidity; electron-donating groups generally decrease it."},
+{type:"Conversions",q:"Convert ethanol into ethene.",a:"C2H5OH —conc. H2SO4, 443 K→ CH2=CH2 + H2O"},
+{type:"Conversions",q:"Convert ethanol into diethyl ether.",a:"2C2H5OH —conc. H2SO4, 413 K→ C2H5OC2H5 + H2O"},
+{type:"Conversions",q:"Convert ethanol into ethanal.",a:"CH3CH2OH —Cu, 573 K→ CH3CHO + H2"},
+{type:"Conversions",q:"Convert propan-2-ol into propanone.",a:"CH3CHOHCH3 —[O]→ CH3COCH3 + H2O"},
+{type:"Conversions",q:"Convert phenol into salicylic acid.",a:"Phenol → Sodium phenoxide → Sodium salicylate (with CO2) → Salicylic acid (after acidification)."},
+{type:"Conversions",q:"Convert phenol into salicylaldehyde.",a:"Phenol + CHCl3 + NaOH; acidification gives salicylaldehyde (Reimer-Tiemann reaction)."},
+{type:"Case Study",q:"What is the functional group of alcohols?",a:"–OH"},
+{type:"Case Study",q:"Which alcohol gives a ketone on oxidation?",a:"Secondary alcohol."},
+{type:"Case Study",q:"Which ion is formed when phenol loses H+?",a:"Phenoxide ion."},
+{type:"Case Study",q:"What colour does phenol give with neutral FeCl3?",a:"Violet."},
+{type:"Case Study",q:"Which reagent is used for ether cleavage?",a:"HI."}
+];
+let count=0;
+function showPage(id,btn){
+ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+ document.getElementById(id).classList.add('active');
+ document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+ if(btn)btn.classList.add('active');
+}
+function render(list){
+ const box=document.getElementById('questions');
+ box.innerHTML='';
+ list.forEach((item,i)=>{
+  const div=document.createElement('div');
+  div.className='question';
+  const q=document.createElement('b');
+  q.textContent=(i+1)+'. ['+item.type+'] '+item.q;
+  const b=document.createElement('button');
+  b.textContent='Show Answer';
+  b.style.marginTop='12px';
+  const a=document.createElement('div');
+  a.className='answer';
+  a.textContent=item.a;
+  b.onclick=()=>{
+   const open=a.style.display==='block';
+   a.style.display=open?'none':'block';
+   b.textContent=open?'Show Answer':'Hide Answer';
+   if(!open){count++;document.getElementById('done').textContent=count;document.getElementById('progressCount').textContent=count;}
+  };
+  div.append(q,b,a);box.append(div);
+ });
+}
+function filterQuestions(){
+ const term=document.getElementById('search').value.toLowerCase();
+ const section=document.getElementById('section').value;
+ render(data.filter(x=>(section==='all'||x.type===section)&&x.q.toLowerCase().includes(term)));
+}
+render(data);
+</script>
+</body>
+</html>
