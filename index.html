@@ -321,8 +321,7 @@ function render(list){
     box.append(div);
   });
 }
-
-function filterQuestions(){function filterQuestions(){
+function filterQuestions(){
   const searchBox=document.getElementById("search");
   const sectionBox=document.getElementById("section");
   const chapterBox=document.getElementById("chapter");
@@ -337,11 +336,11 @@ function filterQuestions(){function filterQuestions(){
   const filtered=all.filter(item=>{
     return (section==="all" || item.type===section) &&
       (chapter==="all" || String(item.chapter)===chapter) &&
-      item.q.toLowerCase().includes(term);
+      (item.q || "").toLowerCase().includes(term);
   });
 
   render(filtered);
-}}
+}
 
 // ==========================================
 // 5. LOAD QUESTIONS FROM SUPABASE
